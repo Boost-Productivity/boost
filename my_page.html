@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h1>Jake's Data</h1>
+    <p id="text"></p>
+    <script>
+        const variants = ["If you send me $1 and an email with proof of payment... \n\n I will send you a link to the code to create this website for yourself, and you'll get access all future updates. \n\n My email is jakebeauofficial@gmail.com \n\n ETH Address: 0x89D2d15957AA852E895708a5b333264b58bEEbB2", "Support with crypto! \n\n ETH Address: 0xE2A0b8ac0e25513EEf76C6aC65bFB63Dd9826Dd4"];
+        const variant = variants[Math.floor(Math.random() * variants.length)];
+        document.getElementById('text').innerText = variant;
+    </script>
+</body>
+
+</html>
