@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .event-log {
+            margin-top: 20px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            /* Ensure it's initially hidden */
+        }
+
+        .event-log table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .event-log th {
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+            padding: 5px;
+        }
+
+        .event-log td {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Jake's Data</h1>
+    <div id="video-container">
+        <video id="video-player" width="560" height="315" controls>
+            <source id="video-source" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Calls to Action -->
+    <div style="margin-top: 20px;">
+        <p><strong>Support with crypto!</strong><br>
+            ETH Address: <span id="eth-address"></span></p>
+
+        <p><strong>Support with your data!</strong><br>
+            <button onclick="downloadLogAndEmail()">Download Your Data and Send</button> it to
+            jakebeauofficial@gmail.com
+            (<a href="#" onclick="toggleEventLog(); return false;" style="color: #0066cc; text-decoration: none;"
+                id="toggle-text">show events</a>)
+        </p>
+
+        <p><strong>Create</strong> your own site like this by sending $10, the data file, and proof of payment.</p>
+    </div>
+
+    <div class="event-log" id="event-log-container">
+        <h3>Event Log (Tracking Everything)</h3>
+        <table id="event-log">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Video content variants with corresponding ETH addresses
+        const variants = [
+            {
+                video: 'https://crimson-fantastic-catshark-161.mypinata.cloud/ipfs/QmdWKMnpxKm6jb8UMT5QBSFqNGo8PENppEYWRvW4SgDGng',
+                ethAddress: '0x15F1514b299d56CA8E1b9E3E8630CE59CB41c1E7'
+            },
+            {
+                video: 'https://crimson-fantastic-catshark-161.mypinata.cloud/ipfs/QmWPG2daR4NZYbcuqdtQhmwyu9CMnZn7KQiu941UDGEc6X',
+                ethAddress: '0x3063374BbcdCe99bD1753D2878DF46a04a36dE0a'
+            }
+        ];
+
+        // Randomly select variant and set video
+        const selectedVariant = variants[Math.floor(Math.random() * variants.length)];
+        document.getElementById('video-source').src = selectedVariant.video;
+        document.getElementById('video-player').load();
+        document.getElementById('eth-address').innerText = selectedVariant.ethAddress;
+
+        // Enhanced logging function
+        function logEvent(eventType, details = {}) {
+            const enrichedDetails = {
+                ...details,
+                currentVariantIndex: variants.indexOf(selectedVariant),
+                currentEthAddress: selectedVariant.ethAddress,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                language: navigator.language,
+                platform: navigator.platform,
+                timeOnPage: ((Date.now() - startTime) / 1000).toFixed(1) + 's'
+            };
+
+            const timestamp = new Date().toISOString();
+            const tbody = document.querySelector('#event-log tbody');
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${timestamp.split('T')[1].split('.')[0]}</td>
+                <td>${eventType}</td>
+                <td>${JSON.stringify(enrichedDetails, null, 2)}</td>
+            `;
+
+            tbody.insertBefore(row, tbody.firstChild);
+        }
+
+        // Function to toggle event log visibility
+        function toggleEventLog() {
+            const eventLogContainer = document.getElementById('event-log-container');
+            const toggleText = document.getElementById('toggle-text');
+            eventLogContainer.style.display = eventLogContainer.style.display === 'none' || eventLogContainer.style.display === '' ? 'block' : 'none';
+            toggleText.innerText = eventLogContainer.style.display === 'none' ? 'show events' : 'hide events';
+        }
+
+        // Function to download the event log as a CSV file
+        function downloadLogAndEmail() {
+            const rows = document.querySelectorAll('#event-log tbody tr');
+            let textContent = "";
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                const [time, event, details] = Array.from(cols).map(col => col.innerText);
+                textContent += `${time} - ${event}\n${details}\n\n`;
+            });
+
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "data.txt");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // Open email client
+            const emailBody = `Instructions:
+ - Attach the data.txt file to this email
+ - Optional: include proof of $10 ETH payment to get source code access
+
+ Hi Jake,
+
+ I've attached my data.
+
+ Here's my feedback about your content:
+ {{feedback}}
+
+ {{optional proof of $10 ETH payment}}
+
+ Best,
+ {{your name}}`;
+            window.location.href = `mailto:jakebeauofficial@gmail.com?subject=Data Submission&body=${encodeURIComponent(emailBody)}`;
+        }
+
+        // Track initial page data
+        const startTime = Date.now();
+        logEvent('page_load', {
+            userAgent: navigator.userAgent,
+            referrer: document.referrer || 'direct',
+            url: window.location.href
+        });
+
+        // Track mouse movement
+        let lastMouseMove = 0;
+        document.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastMouseMove > 1000) { // Log every second at most
+                logEvent('mouse_move', {
+                    x: e.clientX,
+                    y: e.clientY,
+                    inVideo: e.target.tagName === 'IFRAME'
+                });
+                lastMouseMove = now;
+            }
+        });
+
+        // Track scrolling
+        let lastScroll = 0;
+        document.addEventListener('scroll', (e) => {
+            const now = Date.now();
+            if (now - lastScroll > 1000) { // Log every second at most
+                logEvent('page_scroll', {
+                    scrollY: window.scrollY,
+                    scrollPercent: (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100).toFixed(1) + '%'
+                });
+                lastScroll = now;
+            }
+        });
+
+        // Track visibility changes
+        document.addEventListener('visibilitychange', () => {
+            logEvent('visibility_change', {
+                isVisible: !document.hidden,
+                wasHidden: document.hidden
+            });
+        });
+
+        // Track time on page
+        window.addEventListener('beforeunload', () => {
+            const timeSpent = (Date.now() - startTime) / 1000;
+            logEvent('page_exit', {
+                timeSpentSeconds: timeSpent,
+                timeSpentFormatted: `${Math.floor(timeSpent / 60)}m ${Math.floor(timeSpent % 60)}s`
+            });
+        });
+
+        // Track video interactions
+        const videoPlayer = document.getElementById('video-player');
+        videoPlayer.addEventListener('play', () => logEvent('video_play'));
+        videoPlayer.addEventListener('pause', () => logEvent('video_pause'));
+        videoPlayer.addEventListener('ended', () => logEvent('video_ended'));
+
+        // Track video time updates with throttling
+        let lastTimeUpdate = 0;
+        videoPlayer.addEventListener('timeupdate', () => {
+            const now = Date.now();
+            if (now - lastTimeUpdate > 1000) { // Log every second
+                logEvent('video_timeupdate', {
+                    currentTime: videoPlayer.currentTime.toFixed(1),
+                    duration: videoPlayer.duration.toFixed(1)
+                });
+                lastTimeUpdate = now;
+            }
+        });
+
+        // Track video seeking
+        videoPlayer.addEventListener('seeked', () => {
+            logEvent('video_seeked', {
+                currentTime: videoPlayer.currentTime.toFixed(1)
+            });
+        });
+
+        // Track clicks
+        document.addEventListener('click', (e) => {
+            logEvent('click', {
+                x: e.clientX,
+                y: e.clientY,
+                target: e.target.tagName,
+                targetId: e.target.id,
+                inVideo: e.target.tagName === 'IFRAME'
+            });
+        });
+
+        // Track window resize
+        let lastResize = 0;
+        window.addEventListener('resize', () => {
+            const now = Date.now();
+            if (now - lastResize > 1000) { // Log every second at most
+                logEvent('window_resize', {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                });
+                lastResize = now;
+            }
+        });
+    </script>
+</body>
+
+</html>
